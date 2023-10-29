@@ -1,0 +1,20 @@
+apiVersion: aws.platform.upbound.io/v1alpha1
+kind: XEKS
+metadata:
+  name: configuration-aws-eks-karpenter
+  labels:
+    xeks.aws.platform.upbound.io/cluster-id: configuration-aws-eks-karpenter
+spec:
+  parameters:
+    id: configuration-aws-eks-karpenter
+    region: us-west-2
+    version: "1.27"
+    iam:
+      # replace with your custom arn like:
+      roleArn: ${data.aws_eks_iam_default_admin}
+    nodes:
+      count: 3
+      instanceType: t3.small
+  writeConnectionSecretToRef:
+    name: configuration-aws-eks-karpenter-kubeconfig
+    namespace: upbound-system
