@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workload
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: workload
+  template:
+    metadata:
+      labels:
+        app: workload
+    spec:
+      nodeSelector:
+        intent: apps
+        karpenter.sh/capacity-type: on-demand
+      containers:
+      - name: workload
+        image: public.ecr.aws/eks-distro/kubernetes/pause:3.7
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 512m
+            memory: 512Mi 

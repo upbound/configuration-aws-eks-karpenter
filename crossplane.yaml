@@ -1,0 +1,18 @@
+apiVersion: meta.pkg.crossplane.io/v1alpha1
+kind: Configuration
+metadata:
+  name: configuration-aws-eks-karpenter
+  annotations:
+    meta.crossplane.io/maintainer: Upbound <support@upbound.io>
+    meta.crossplane.io/source: github.com/upbound/configuration-aws-eks-karpenter
+    meta.crossplane.io/license: Apache-2.0
+spec:
+  crossplane:
+    version: ">=v1.13.2-0"
+  dependsOn:
+    - configuration: xpkg.upbound.io/upbound/configuration-aws-eks-irsa
+      version: ">=v0.1.0"
+    - provider: xpkg.upbound.io/upbound/provider-aws-sqs
+      version: ">=v0.36.0"
+    - provider: xpkg.upbound.io/upbound/provider-aws-cloudwatchevents
+      version: ">=v0.36.0"
