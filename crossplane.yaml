@@ -13,6 +13,6 @@ spec:
     - configuration: xpkg.upbound.io/upbound/configuration-aws-eks-irsa
       version: ">=v0.1.0"
     - provider: xpkg.upbound.io/upbound/provider-aws-sqs
-      version: ">=v0.36.0"
+      version: "v0.43.0"
     - provider: xpkg.upbound.io/upbound/provider-aws-cloudwatchevents
-      version: ">=v0.36.0"
+      version: "v0.43.0"
