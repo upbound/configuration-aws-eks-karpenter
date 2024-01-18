@@ -230,7 +230,6 @@ spec:
                             "Resource": [
                               "arn:aws:ec2:%[1]s::image/*",
                               "arn:aws:ec2:%[1]s::snapshot/*",
-                              "arn:aws:ec2:%[1]s:*:spot-instances-request/*",
                               "arn:aws:ec2:%[1]s:*:security-group/*",
                               "arn:aws:ec2:%[1]s:*:subnet/*",
                               "arn:aws:ec2:%[1]s:*:launch-template/*"
@@ -248,7 +247,8 @@ spec:
                               "arn:aws:ec2:%[1]s:*:instance/*",
                               "arn:aws:ec2:%[1]s:*:volume/*",
                               "arn:aws:ec2:%[1]s:*:network-interface/*",
-                              "arn:aws:ec2:%[1]s:*:launch-template/*"
+                              "arn:aws:ec2:%[1]s:*:launch-template/*",
+                              "arn:aws:ec2:%[1]s:*:spot-instances-request/*"
                             ],
                             "Action": [
                               "ec2:RunInstances",
@@ -272,7 +272,8 @@ spec:
                               "arn:aws:ec2:%[1]s:*:instance/*",
                               "arn:aws:ec2:%[1]s:*:volume/*",
                               "arn:aws:ec2:%[1]s:*:network-interface/*",
-                              "arn:aws:ec2:%[1]s:*:launch-template/*"
+                              "arn:aws:ec2:%[1]s:*:launch-template/*",
+                              "arn:aws:ec2:%[1]s:*:spot-instances-request/*"
                             ],
                             "Action": "ec2:CreateTags",
                             "Condition": {
@@ -368,7 +369,6 @@ spec:
                             "Resource": "%[3]s",
                             "Action": [
                               "sqs:DeleteMessage",
-                              "sqs:GetQueueAttributes",
                               "sqs:GetQueueUrl",
                               "sqs:ReceiveMessage"
                             ]
@@ -376,13 +376,75 @@ spec:
                           {
                             "Sid": "AllowPassingInstanceRole",
                             "Effect": "Allow",
-                            "Resource": "%[5]s",
+                            "Resource": "arn:aws:iam::%[4]s:role/KarpenterNodeRole-%[2]s",
                             "Action": "iam:PassRole",
                             "Condition": {
                               "StringEquals": {
                                 "iam:PassedToService": "ec2.amazonaws.com"
                               }
                             }
+                          },
+                          {
+                            "Sid": "AllowScopedInstanceProfileCreationActions",
+                            "Effect": "Allow",
+                            "Resource": "*",
+                            "Action": [
+                              "iam:CreateInstanceProfile"
+                            ],
+                            "Condition": {
+                              "StringEquals": {
+                                "aws:RequestTag/kubernetes.io/cluster/%[2]s": "owned",
+                                "aws:RequestTag/topology.kubernetes.io/region": "%[1]s"
+                              },
+                              "StringLike": {
+                                "aws:RequestTag/karpenter.k8s.aws/ec2nodeclass": "*"
+                              }
+                            }
+                          },
+                          {
+                            "Sid": "AllowScopedInstanceProfileTagActions",
+                            "Effect": "Allow",
+                            "Resource": "*",
+                            "Action": [
+                              "iam:TagInstanceProfile"
+                            ],
+                            "Condition": {
+                              "StringEquals": {
+                                "aws:ResourceTag/kubernetes.io/cluster/%[2]s": "owned",
+                                "aws:ResourceTag/topology.kubernetes.io/region": "%[1]s",
+                                "aws:RequestTag/kubernetes.io/cluster/%[2]s": "owned",
+                                "aws:RequestTag/topology.kubernetes.io/region": "%[1]s"
+                              },
+                              "StringLike": {
+                                "aws:ResourceTag/karpenter.k8s.aws/ec2nodeclass": "*",
+                                "aws:RequestTag/karpenter.k8s.aws/ec2nodeclass": "*"
+                              }
+                            }
+                          },
+                          {
+                            "Sid": "AllowScopedInstanceProfileActions",
+                            "Effect": "Allow",
+                            "Resource": "*",
+                            "Action": [
+                              "iam:AddRoleToInstanceProfile",
+                              "iam:RemoveRoleFromInstanceProfile",
+                              "iam:DeleteInstanceProfile"
+                            ],
+                            "Condition": {
+                              "StringEquals": {
+                                "aws:ResourceTag/kubernetes.io/cluster/%[2]s": "owned",
+                                "aws:ResourceTag/topology.kubernetes.io/region": "%[1]s"
+                              },
+                              "StringLike": {
+                                "aws:ResourceTag/karpenter.k8s.aws/ec2nodeclass": "*"
+                              }
+                            }
+                          },
+                          {
+                            "Sid": "AllowInstanceProfileReadActions",
+                            "Effect": "Allow",
+                            "Resource": "*",
+                            "Action": "iam:GetInstanceProfile"
                           },
                           {
                             "Sid": "AllowAPIServerEndpointDiscovery",
