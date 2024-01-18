@@ -260,7 +260,7 @@ spec:
                                 "aws:RequestTag/kubernetes.io/cluster/%[2]s": "owned"
                               },
                               "StringLike": {
-                                "aws:RequestTag/karpenter.sh/provisioner-name": "*"
+                                "aws:RequestTag/karpenter.sh/nodepool": "*"
                               }
                             }
                           },
@@ -285,27 +285,26 @@ spec:
                                 ]
                               },
                               "StringLike": {
-                                "aws:RequestTag/karpenter.sh/provisioner-name": "*"
+                                "aws:RequestTag/karpenter.sh/nodepool": "*"
                               }
                             }
                           },
                           {
-                            "Sid": "AllowMachineMigrationTagging",
+                            "Sid": "AllowScopedResourceTagging",
                             "Effect": "Allow",
                             "Resource": "arn:aws:ec2:%[1]s:*:instance/*",
                             "Action": "ec2:CreateTags",
                             "Condition": {
                               "StringEquals": {
-                                "aws:ResourceTag/kubernetes.io/cluster/%[2]s": "owned",
-                                "aws:RequestTag/karpenter.sh/managed-by": "%[2]s"
+                                "aws:ResourceTag/kubernetes.io/cluster/%[2]s": "owned"
                               },
                               "StringLike": {
-                                "aws:RequestTag/karpenter.sh/provisioner-name": "*"
+                                "aws:ResourceTag/karpenter.sh/nodepool": "*"
                               },
                               "ForAllValues:StringEquals": {
                                 "aws:TagKeys": [
-                                  "karpenter.sh/provisioner-name",
-                                  "karpenter.sh/managed-by"
+                                  "karpenter.sh/nodeclaim",
+                                  "Name"
                                 ]
                               }
                             }
@@ -326,7 +325,7 @@ spec:
                                 "aws:ResourceTag/kubernetes.io/cluster/%[2]s": "owned"
                               },
                               "StringLike": {
-                                "aws:ResourceTag/karpenter.sh/provisioner-name": "*"
+                                "aws:ResourceTag/karpenter.sh/nodepool": "*"
                               }
                             }
                           },
