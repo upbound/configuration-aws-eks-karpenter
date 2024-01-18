@@ -71,6 +71,7 @@ uptest: $(UPTEST) $(KUBECTL) $(KUTTL)
 
 # This target requires the following environment variables to be set:
 # - UPTEST_CLOUD_CREDENTIALS, cloud credentials for the provider being tested, e.g. export UPTEST_CLOUD_CREDENTIALS=$(cat ~/.aws/credentials)
+# Use `make e2e SKIP_DELETE=--skip-delete` to skip deletion of resources created during the test.
 e2e: build controlplane.up local.xpkg.deploy.configuration.$(PROJECT_NAME) uptest
 
 render:
