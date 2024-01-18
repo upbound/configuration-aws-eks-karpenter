@@ -5,6 +5,7 @@ echo "Running setup.sh"
 echo "Waiting until all configurations are healthy/installed..."
 "${KUBECTL}" wait configuration.pkg --all --for=condition=Healthy --timeout 5m
 "${KUBECTL}" wait configuration.pkg --all --for=condition=Installed --timeout 5m
+"${KUBECTL}" wait configurationrevisions.pkg --all --for=condition=Healthy --timeout 5m
 
 echo "Creating cloud credential secret..."
 "${KUBECTL}" -n upbound-system create secret generic aws-creds --from-literal=credentials="${UPTEST_CLOUD_CREDENTIALS}" \
@@ -50,7 +51,7 @@ get_annotation() {
 while true; do
     resource_info=$(kubectl get cluster.eks.aws.upbound.io -o json)
     annotation_value=$(get_annotation "$resource_info" "crossplane.io/external-name")
-    
+
     if [ -n "$annotation_value" ]; then
         cat <<EOF | "${KUBECTL}" apply -f -
 apiVersion: aws.platform.upbound.io/v1alpha1
@@ -65,6 +66,6 @@ spec:
 EOF
         exit 0
     fi
-    
+
     sleep 1
 done
