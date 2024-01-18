@@ -376,7 +376,7 @@ spec:
                           {
                             "Sid": "AllowPassingInstanceRole",
                             "Effect": "Allow",
-                            "Resource": "arn:aws:iam::%[4]s:role/KarpenterNodeRole-%[2]s",
+                            "Resource": "%[5]s",
                             "Action": "iam:PassRole",
                             "Condition": {
                               "StringEquals": {
