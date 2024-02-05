@@ -6,6 +6,11 @@ metadata:
     meta.crossplane.io/maintainer: Upbound <support@upbound.io>
     meta.crossplane.io/source: github.com/upbound/configuration-aws-eks-karpenter
     meta.crossplane.io/license: Apache-2.0
+    meta.crossplane.io/description: |
+      This configuration deploys EKS Karpenter clusters. With this configuration, you can integrate supporting AWS services, ensuring automated and scalable deployment of Kubernetes clusters in the cloud.
+    meta.crossplane.io/readme: |
+      This configuration deploys EKS Karpenter clusters with properties like clusterName, region, and deletionPolicy, all aimed at customizing AWS resource deployment in Crossplane.
+      This bundles resources like IAM roles, SQS queues, and CloudWatch event rules using a pipeline of patch-and-transform steps to automate deployment of a scalable Kubernetes cluster on AWS.
 spec:
   crossplane:
     version: ">=v1.14.1-0"
