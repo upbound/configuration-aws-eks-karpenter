@@ -20,7 +20,7 @@ spec:
       version: "v0.6.0"
     - provider: xpkg.upbound.io/upbound/provider-aws-sqs
       # renovate: datasource=github-releases depName=upbound/provider-aws
-      version: "v0.47.1"
+      version: "v0.47.2"
     - provider: xpkg.upbound.io/upbound/provider-aws-cloudwatchevents
       # renovate: datasource=github-releases depName=upbound/provider-aws
-      version: "v0.47.1"
+      version: "v0.47.2"
