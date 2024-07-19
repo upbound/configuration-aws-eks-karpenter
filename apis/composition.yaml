@@ -505,28 +505,22 @@ spec:
                 patchSetName: deletionPolicy
               - type: PatchSet
                 patchSetName: region
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
+              - combine:
+                  strategy: string
+                  string:
+                    fmt: '%s-healthevent'
+                  variables:
+                    - fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.annotations[crossplane.io/external-name]
-                transforms:
-                  - match:
-                      fallbackValue: null
-                      patterns:
-                        - regexp: .*
-                          result: healthevent
-                          type: regexp
-                    type: match
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
+                type: CombineFromComposite
+              - combine:
+                  strategy: string
+                  string:
+                    fmt: '%s-healthevent'
+                  variables:
+                    - fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.name
-                transforms:
-                  - match:
-                      fallbackValue: null
-                      patterns:
-                        - regexp: .*
-                          result: healthevent
-                          type: regexp
-                    type: match
+                type: CombineFromComposite
 
           - name: ruleSpotInterrupt
             base:
@@ -554,28 +548,23 @@ spec:
                 patchSetName: deletionPolicy
               - type: PatchSet
                 patchSetName: region
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
+              - combine:
+                  strategy: string
+                  string:
+                    fmt: '%s-spotinterrupt'
+                  variables:
+                    - fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.annotations[crossplane.io/external-name]
-                transforms:
-                  - match:
-                      fallbackValue: null
-                      patterns:
-                        - regexp: .*
-                          result: spotinterrupt
-                          type: regexp
-                    type: match
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
+                type: CombineFromComposite
+
+              - combine:
+                  strategy: string
+                  string:
+                    fmt: '%s-spotinterrupt'
+                  variables:
+                    - fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.name
-                transforms:
-                  - match:
-                      fallbackValue: null
-                      patterns:
-                        - regexp: .*
-                          result: spotinterrupt
-                          type: regexp
-                    type: match
+                type: CombineFromComposite
 
           - name: ruleInstanceRebalance
             base:
@@ -603,28 +592,22 @@ spec:
                 patchSetName: deletionPolicy
               - type: PatchSet
                 patchSetName: region
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
+              - combine:
+                  strategy: string
+                  string:
+                    fmt: '%s-instancerebalance'
+                  variables:
+                    - fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.annotations[crossplane.io/external-name]
-                transforms:
-                  - match:
-                      fallbackValue: null
-                      patterns:
-                        - regexp: .*
-                          result: instancerebalance
-                          type: regexp
-                    type: match
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
+                type: CombineFromComposite
+              - combine:
+                  strategy: string
+                  string:
+                    fmt: '%s-instancerebalance'
+                  variables:
+                    - fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.name
-                transforms:
-                  - match:
-                      fallbackValue: null
-                      patterns:
-                        - regexp: .*
-                          result: instancerebalance
-                          type: regexp
-                    type: match
+                type: CombineFromComposite
 
           - name: ruleInstanceStateChange
             base:
@@ -652,28 +635,22 @@ spec:
                 patchSetName: deletionPolicy
               - type: PatchSet
                 patchSetName: region
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
+              - combine:
+                  strategy: string
+                  string:
+                    fmt: '%s-instancestatechange'
+                  variables:
+                    - fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.annotations[crossplane.io/external-name]
-                transforms:
-                  - match:
-                      fallbackValue: null
-                      patterns:
-                        - regexp: .*
-                          result: instancestatechange
-                          type: regexp
-                    type: match
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
+                type: CombineFromComposite
+              - combine:
+                  strategy: string
+                  string:
+                    fmt: '%s-instancestatechange'
+                  variables:
+                    - fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.name
-                transforms:
-                  - match:
-                      fallbackValue: null
-                      patterns:
-                        - regexp: .*
-                          result: instancestatechange
-                          type: regexp
-                    type: match
+                type: CombineFromComposite
 
           - name: ruleHealthEventTarget
             base:
