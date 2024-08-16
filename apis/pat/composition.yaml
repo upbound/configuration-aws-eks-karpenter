@@ -1,9 +1,10 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: xkarpenters.aws.platform.upbound.io
+  name: pat.xkarpenters.aws.platform.upbound.io
   labels:
     provider: aws
+    function: patch-and-transform
 spec:
   writeConnectionSecretsToNamespace: upbound-system
   compositeTypeRef:
@@ -183,39 +184,65 @@ spec:
                   fromFieldPath: Optional
                 toFieldPath: status.karpenter.instanceProfileName
 
-          - name: IRSA
+          - name: AccessEntry
+            base:
+              apiVersion: eks.aws.upbound.io/v1beta1
+              kind: AccessEntry
+              spec:
+                forProvider:
+                  type: EC2_LINUX
+                  principalArnFromRoleSelector:
+                    matchControllerRef: true
+                    matchLabels:
+                      role: karpenter
+            patches:
+              - type: PatchSet
+                patchSetName: providerConfigRef
+              - type: PatchSet
+                patchSetName: deletionPolicy
+              - type: PatchSet
+                patchSetName: region
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.clusterName
+                toFieldPath: spec.forProvider.clusterName
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.clusterNameRef
+                toFieldPath: spec.forProvider.clusterNameRef
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.clusterNameSelector
+                toFieldPath: spec.forProvider.clusterNameSelector
+              - type: ToCompositeFieldPath
+                fromFieldPath: status.atProvider.clusterName
+                toFieldPath: status.karpenter.clusterName
+                policy:
+                  fromFieldPath: Optional
+
+          - name: PodIdentity
             base:
               apiVersion: aws.platform.upbound.io/v1alpha1
-              kind: XIRSA
+              kind: XPodIdentity
               spec:
                 parameters:
-                  condition: StringEquals
+                  inlinePolicy:
+                    - name: default
                   serviceAccount:
                     name: karpenter
                     namespace: karpenter
             patches:
               - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.providerConfigName
-                toFieldPath: spec.parameters.providerConfigName
+                fromFieldPath: spec.parameters.region
+                toFieldPath: spec.parameters.region
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.deletionPolicy
                 toFieldPath: spec.parameters.deletionPolicy
               - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
-                toFieldPath: metadata.name
-                transforms:
-                  - string:
-                      fmt: '%s-karpenter'
-                      type: Format
-                    type: string
+                fromFieldPath: spec.parameters.providerConfigName
+                toFieldPath: spec.parameters.providerConfigName
               - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
-                toFieldPath: spec.parameters.id
-              - type: ToCompositeFieldPath
-                fromFieldPath: status.roleArn
+                fromFieldPath: status.karpenter.clusterName
+                toFieldPath: spec.parameters.clusterName
                 policy:
-                  fromFieldPath: Optional
-                toFieldPath: status.karpenter.IRSARoleArn
+                  fromFieldPath: Required
               - type: CombineFromComposite
                 combine:
                   strategy: string
@@ -232,13 +259,29 @@ spec:
                               "arn:aws:ec2:%[1]s::snapshot/*",
                               "arn:aws:ec2:%[1]s:*:spot-instances-request/*",
                               "arn:aws:ec2:%[1]s:*:security-group/*",
-                              "arn:aws:ec2:%[1]s:*:subnet/*",
-                              "arn:aws:ec2:%[1]s:*:launch-template/*"
+                              "arn:aws:ec2:%[1]s:*:subnet/*"
                             ],
                             "Action": [
                               "ec2:RunInstances",
                               "ec2:CreateFleet"
                             ]
+                          },
+                          {
+                            "Sid": "AllowScopedEC2LaunchTemplateAccessActions",
+                            "Effect": "Allow",
+                            "Resource": "arn:aws:ec2:%[1]s:*:launch-template/*",
+                            "Action": [
+                              "ec2:RunInstances",
+                              "ec2:CreateFleet"
+                            ],
+                            "Condition": {
+                              "StringEquals": {
+                                "aws:ResourceTag/kubernetes.io/cluster/%[2]s": "owned"
+                              },
+                              "StringLike": {
+                                "aws:ResourceTag/karpenter.sh/nodepool": "*"
+                              }
+                            }
                           },
                           {
                             "Sid": "AllowScopedEC2InstanceActionsWithTags",
@@ -248,7 +291,8 @@ spec:
                               "arn:aws:ec2:%[1]s:*:instance/*",
                               "arn:aws:ec2:%[1]s:*:volume/*",
                               "arn:aws:ec2:%[1]s:*:network-interface/*",
-                              "arn:aws:ec2:%[1]s:*:launch-template/*"
+                              "arn:aws:ec2:%[1]s:*:launch-template/*",
+                              "arn:aws:ec2:%[1]s:*:spot-instances-request/*"
                             ],
                             "Action": [
                               "ec2:RunInstances",
@@ -257,7 +301,8 @@ spec:
                             ],
                             "Condition": {
                               "StringEquals": {
-                                "aws:RequestTag/kubernetes.io/cluster/%[2]s": "owned"
+                                "aws:RequestTag/kubernetes.io/cluster/%[2]s": "owned",
+                                "aws:RequestTag/eks:eks-cluster-name": "%[2]s"
                               },
                               "StringLike": {
                                 "aws:RequestTag/karpenter.sh/nodepool": "*"
@@ -272,12 +317,14 @@ spec:
                               "arn:aws:ec2:%[1]s:*:instance/*",
                               "arn:aws:ec2:%[1]s:*:volume/*",
                               "arn:aws:ec2:%[1]s:*:network-interface/*",
-                              "arn:aws:ec2:%[1]s:*:launch-template/*"
+                              "arn:aws:ec2:%[1]s:*:launch-template/*",
+                              "arn:aws:ec2:%[1]s:*:spot-instances-request/*"
                             ],
                             "Action": "ec2:CreateTags",
                             "Condition": {
                               "StringEquals": {
                                 "aws:RequestTag/kubernetes.io/cluster/%[2]s": "owned",
+                                "aws:RequestTag/eks:eks-cluster-name": "%[2]s",
                                 "ec2:CreateAction": [
                                   "RunInstances",
                                   "CreateFleet",
@@ -301,8 +348,12 @@ spec:
                               "StringLike": {
                                 "aws:ResourceTag/karpenter.sh/nodepool": "*"
                               },
+                              "StringEqualsIfExists": {
+                                "aws:RequestTag/eks:eks-cluster-name": "%[2]s"
+                              },
                               "ForAllValues:StringEquals": {
                                 "aws:TagKeys": [
+                                  "eks:eks-cluster-name",
                                   "karpenter.sh/nodeclaim",
                                   "Name"
                                 ]
@@ -368,7 +419,6 @@ spec:
                             "Resource": "%[3]s",
                             "Action": [
                               "sqs:DeleteMessage",
-                              "sqs:GetQueueAttributes",
                               "sqs:GetQueueUrl",
                               "sqs:ReceiveMessage"
                             ]
@@ -394,13 +444,13 @@ spec:
                       }
                   variables:
                     - fromFieldPath: spec.parameters.region
-                    - fromFieldPath: spec.parameters.clusterName
+                    - fromFieldPath: status.karpenter.clusterName
                     - fromFieldPath: status.karpenter.sqsQueueArn
                     - fromFieldPath: status.karpenter.accountId
                     - fromFieldPath: status.karpenter.instanceProfileRoleArn
                 policy:
                   fromFieldPath: Required
-                toFieldPath: spec.parameters.policyDocument
+                toFieldPath: spec.parameters.inlinePolicy[0].policy
 
           - name: sqsQueue
             base:
@@ -505,28 +555,20 @@ spec:
                 patchSetName: deletionPolicy
               - type: PatchSet
                 patchSetName: region
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
+              - fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.annotations[crossplane.io/external-name]
                 transforms:
-                  - match:
-                      fallbackValue: null
-                      patterns:
-                        - regexp: .*
-                          result: healthevent
-                          type: regexp
-                    type: match
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
+                  - string:
+                      fmt: '%s-healthevent'
+                      type: Format
+                    type: string
+              - fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.name
                 transforms:
-                  - match:
-                      fallbackValue: null
-                      patterns:
-                        - regexp: .*
-                          result: healthevent
-                          type: regexp
-                    type: match
+                  - string:
+                      fmt: '%s-healthevent'
+                      type: Format
+                    type: string
 
           - name: ruleSpotInterrupt
             base:
@@ -554,28 +596,20 @@ spec:
                 patchSetName: deletionPolicy
               - type: PatchSet
                 patchSetName: region
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
+              - fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.annotations[crossplane.io/external-name]
                 transforms:
-                  - match:
-                      fallbackValue: null
-                      patterns:
-                        - regexp: .*
-                          result: spotinterrupt
-                          type: regexp
-                    type: match
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
+                  - string:
+                      fmt: '%s-spotinterrupt'
+                      type: Format
+                    type: string
+              - fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.name
                 transforms:
-                  - match:
-                      fallbackValue: null
-                      patterns:
-                        - regexp: .*
-                          result: spotinterrupt
-                          type: regexp
-                    type: match
+                  - string:
+                      fmt: '%s-spotinterrupt'
+                      type: Format
+                    type: string
 
           - name: ruleInstanceRebalance
             base:
@@ -603,28 +637,20 @@ spec:
                 patchSetName: deletionPolicy
               - type: PatchSet
                 patchSetName: region
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
+              - fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.annotations[crossplane.io/external-name]
                 transforms:
-                  - match:
-                      fallbackValue: null
-                      patterns:
-                        - regexp: .*
-                          result: instancerebalance
-                          type: regexp
-                    type: match
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
+                  - string:
+                      fmt: '%s-instancerebalance'
+                      type: Format
+                    type: string
+              - fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.name
                 transforms:
-                  - match:
-                      fallbackValue: null
-                      patterns:
-                        - regexp: .*
-                          result: instancerebalance
-                          type: regexp
-                    type: match
+                  - string:
+                      fmt: '%s-instancerebalance'
+                      type: Format
+                    type: string
 
           - name: ruleInstanceStateChange
             base:
@@ -652,28 +678,20 @@ spec:
                 patchSetName: deletionPolicy
               - type: PatchSet
                 patchSetName: region
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
+              - fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.annotations[crossplane.io/external-name]
                 transforms:
-                  - match:
-                      fallbackValue: null
-                      patterns:
-                        - regexp: .*
-                          result: instancestatechange
-                          type: regexp
-                    type: match
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
+                  - string:
+                      fmt: '%s-instancestatechange'
+                      type: Format
+                    type: string
+              - fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.name
                 transforms:
-                  - match:
-                      fallbackValue: null
-                      patterns:
-                        - regexp: .*
-                          result: instancestatechange
-                          type: regexp
-                    type: match
+                  - string:
+                      fmt: '%s-instancestatechange'
+                      type: Format
+                    type: string
 
           - name: ruleHealthEventTarget
             base:
@@ -782,23 +800,21 @@ spec:
               spec:
                 deletionPolicy: Orphan
                 forProvider:
+                  wait: true
                   chart:
                     name: karpenter
                     repository: oci://public.ecr.aws/karpenter
-                    version: v0.33.1
+                    version: 1.0.0
                   namespace: karpenter
             patches:
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.id
                 toFieldPath: spec.providerConfigRef.name
               - type: FromCompositeFieldPath
-                fromFieldPath: status.karpenter.IRSARoleArn
+                fromFieldPath: status.karpenter.clusterName
+                toFieldPath: spec.forProvider.values.settings.clusterName
                 policy:
                   fromFieldPath: Required
-                toFieldPath: spec.forProvider.values.serviceAccount.annotations[eks.amazonaws.com/role-arn]
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.clusterName
-                toFieldPath: spec.forProvider.values.settings.clusterName
               - type: FromCompositeFieldPath
                 fromFieldPath: status.karpenter.sqsQueueName
                 policy:
@@ -824,21 +840,21 @@ spec:
                 deletionPolicy: Orphan
                 forProvider:
                   manifest:
-                    apiVersion: karpenter.sh/v1beta1
+                    apiVersion: karpenter.sh/v1
                     kind: NodePool
                     metadata:
                       name: default
                     spec:
                       disruption:
-                        consolidationPolicy: WhenUnderutilized
-                        expireAfter: 168h
+                        consolidationPolicy: WhenEmptyOrUnderutilized
+                        consolidateAfter: 1m
                       template:
                         metadata:
                           labels:
                             intent: apps
                         spec:
                           nodeClassRef:
-                            apiVersion: karpenter.k8s.aws/v1beta1
+                            group: karpenter.k8s.aws
                             kind: EC2NodeClass
                             name: default
                           requirements:
@@ -885,12 +901,14 @@ spec:
                 deletionPolicy: Orphan
                 forProvider:
                   manifest:
-                    apiVersion: karpenter.k8s.aws/v1beta1
+                    apiVersion: karpenter.k8s.aws/v1
                     kind: EC2NodeClass
                     metadata:
                       name: default
                     spec:
-                      amiFamily: AL2 # Amazon Linux 2
+                      amiFamily: AL2
+                      amiSelectorTerms:
+                        - alias: al2@latest
                       tags:
                         KarpenterNodePoolName: default
                         NodeType: default
@@ -901,10 +919,15 @@ spec:
                 toFieldPath: spec.providerConfigRef.name
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.id
-                toFieldPath: spec.forProvider.manifest.spec.subnetSelectorTerms[0].tags[networks.aws.platform.upbound.io/network-id] #(TODO: ytsarev) check tags
+                toFieldPath: spec.forProvider.manifest.spec.subnetSelectorTerms[0].tags[networks.aws.platform.upbound.io/network-id]
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.id
                 toFieldPath: spec.forProvider.manifest.spec.securityGroupSelectorTerms[0].tags[eks.aws.platform.upbound.io/discovery]
+              - type: FromCompositeFieldPath
+                fromFieldPath: status.karpenter.clusterName
+                policy:
+                  fromFieldPath: Required
+                toFieldPath: spec.forProvider.manifest.spec.securityGroupSelectorTerms[0].tags[aws:eks:cluster-name]
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.id
                 toFieldPath: spec.forProvider.manifest.spec.tags[karpenter.sh/discovery]

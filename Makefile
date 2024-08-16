@@ -11,9 +11,10 @@ PLATFORMS ?= linux_amd64
 # ====================================================================================
 # Setup Kubernetes tools
 
-UP_VERSION = v0.24.1
+UP_VERSION = v0.32.1
 UP_CHANNEL = stable
-UPTEST_VERSION = v0.11.0
+UPTEST_VERSION = v0.13.1
+CROSSPLANE_CLI_VERSION=v1.16.0
 
 -include build/makelib/k8s_tools.mk
 # ====================================================================================
@@ -27,8 +28,12 @@ XPKG_REG_ORGS_NO_PROMOTE ?= xpkg.upbound.io/upbound
 XPKGS = $(PROJECT_NAME)
 -include build/makelib/xpkg.mk
 
+CROSSPLANE_VERSION = 1.16.0-up.1
+CROSSPLANE_CHART_REPO = https://charts.upbound.io/stable
+CROSSPLANE_CHART_NAME = universal-crossplane
 CROSSPLANE_NAMESPACE = upbound-system
 CROSSPLANE_ARGS = "--enable-usages"
+KIND_CLUSTER_NAME = uptest-$(PROJECT_NAME)
 -include build/makelib/local.xpkg.mk
 -include build/makelib/controlplane.mk
 
@@ -66,20 +71,45 @@ build.init: $(UP)
 SKIP_DELETE ?=
 uptest: $(UPTEST) $(KUBECTL) $(KUTTL)
 	@$(INFO) running automated tests
-	@KUBECTL=$(KUBECTL) KUTTL=$(KUTTL) CROSSPLANE_NAMESPACE=$(CROSSPLANE_NAMESPACE) $(UPTEST) e2e test/karpenter-xr.yaml,examples/network-xr.yaml,examples/eks-xr.yaml --data-source="${UPTEST_DATASOURCE_PATH}" --setup-script=test/setup.sh --default-timeout=2400 $(SKIP_DELETE) || $(FAIL)
+	@KUBECTL=$(KUBECTL) KUTTL=$(KUTTL) CROSSPLANE_NAMESPACE=$(CROSSPLANE_NAMESPACE) CROSSPLANE_CLI=$(CROSSPLANE_CLI) $(UPTEST) e2e "${UPTEST_EXAMPLE_LIST}" --data-source="${UPTEST_DATASOURCE_PATH}" --setup-script=test/setup.sh --default-timeout=2400 $(SKIP_DELETE) || $(FAIL)
 	@$(OK) running automated tests
 
 # This target requires the following environment variables to be set:
 # - UPTEST_CLOUD_CREDENTIALS, cloud credentials for the provider being tested, e.g. export UPTEST_CLOUD_CREDENTIALS=$(cat ~/.aws/credentials)
 # Use `make e2e SKIP_DELETE=--skip-delete` to skip deletion of resources created during the test.
-e2e: build controlplane.up local.xpkg.deploy.configuration.$(PROJECT_NAME) uptest
+e2e: build controlplane.up local.xpkg.deploy.configuration.$(PROJECT_NAME) uptest  ## Run uptest together with all dependencies. Use `make e2e SKIP_DELETE=--skip-delete` to skip deletion of resources.
 
-render:
-	crossplane beta render examples/karpenter-xr.yaml apis/composition.yaml examples/functions.yaml -r
+render: $(CROSSPLANE_CLI) ${YQ}
+	@indir="./examples"; \
+	for file in $$(find $$indir -type f -name '*.yaml' ); do \
+	    doc_count=$$(grep -c '^---' "$$file"); \
+	    if [[ $$doc_count -gt 0 ]]; then \
+	        continue; \
+	    fi; \
+	    COMPOSITION=$$(${YQ} eval '.metadata.annotations."render.crossplane.io/composition-path"' $$file); \
+	    FUNCTION=$$(${YQ} eval '.metadata.annotations."render.crossplane.io/function-path"' $$file); \
+	    ENVIRONMENT=$$(${YQ} eval '.metadata.annotations."render.crossplane.io/environment-path"' $$file); \
+	    OBSERVE=$$(${YQ} eval '.metadata.annotations."render.crossplane.io/observe-path"' $$file); \
+	    if [[ "$$ENVIRONMENT" == "null" ]]; then \
+	        ENVIRONMENT=""; \
+	    fi; \
+	    if [[ "$$OBSERVE" == "null" ]]; then \
+	        OBSERVE=""; \
+	    fi; \
+	    if [[ "$$COMPOSITION" == "null" || "$$FUNCTION" == "null" ]]; then \
+	        continue; \
+	    fi; \
+	    ENVIRONMENT=$${ENVIRONMENT=="null" ? "" : $$ENVIRONMENT}; \
+	    OBSERVE=$${OBSERVE=="null" ? "" : $$OBSERVE}; \
+	    $(CROSSPLANE_CLI) beta render $$file $$COMPOSITION $$FUNCTION $${ENVIRONMENT:+-e $$ENVIRONMENT} $${OBSERVE:+-o $$OBSERVE} -x; \
+	done
 
-yamllint:
+yamllint: ## Static yamllint check
 	@$(INFO) running yamllint
 	@yamllint ./apis || $(FAIL)
 	@$(OK) running yamllint
 
-.PHONY: uptest e2e render yamllint
+help.local:
+	@grep -E '^[a-zA-Z_-]+.*:.*?## .*$$' Makefile | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+.PHONY: uptest e2e render yamllint help.local
