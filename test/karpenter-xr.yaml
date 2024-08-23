@@ -1,8 +1,0 @@
-apiVersion: aws.platform.upbound.io/v1alpha1
-kind: XKarpenter
-metadata:
-  name: configuration-aws-eks-karpenter
-spec:
-  parameters:
-    id: configuration-aws-eks-karpenter
-    region: us-west-2

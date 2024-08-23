@@ -34,38 +34,3 @@ spec:
       namespace: upbound-system
     source: Secret
 EOF
-
-SCRIPT_DIR=$( cd -- $( dirname -- "${BASH_SOURCE[0]}" ) &> /dev/null && pwd )
-
-"${KUBECTL}" apply -f ${SCRIPT_DIR}/../examples/eks-xr.yaml
-
-# Function to extract the annotation from a resource
-get_annotation() {
-    local resource_json="$1"
-    local annotation="$2"
-    annotation_value=$(echo "$resource_json" | grep -o "\"$annotation\": \"[^\"]*\"" | cut -d '"' -f 4)
-    echo "$annotation_value"
-}
-
-# Watch for changes to the resource and extract the annotation
-while true; do
-    resource_info=$(kubectl get cluster.eks.aws.upbound.io -o json)
-    annotation_value=$(get_annotation "$resource_info" "crossplane.io/external-name")
-
-    if [ -n "$annotation_value" ]; then
-        cat <<EOF | "${KUBECTL}" apply -f -
-apiVersion: aws.platform.upbound.io/v1alpha1
-kind: XKarpenter
-metadata:
-  name: configuration-aws-eks-karpenter
-spec:
-  parameters:
-    clusterName: $annotation_value
-    id: configuration-aws-eks-karpenter
-    region: us-west-2
-EOF
-        exit 0
-    fi
-
-    sleep 1
-done
