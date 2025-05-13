@@ -9,6 +9,9 @@ spec:
     id: configuration-aws-eks-karpenter
     region: us-west-2
     version: "1.27"
+    accessConfig:
+      authenticationMode: API_AND_CONFIG_MAP
+      bootstrapClusterCreatorAdminPermissions: true
     nodes:
       count: 3
       instanceType: t3.small
