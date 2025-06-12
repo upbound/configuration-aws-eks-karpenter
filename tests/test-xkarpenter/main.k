@@ -1,3 +1,5 @@
+import json
+
 import models.io.crossplane.kubernetes.v1alpha1 as kubernetesv1alpha1
 import models.io.upbound.aws.cloudwatchevents.v1beta1 as cloudwatcheventsv1beta1
 import models.io.upbound.aws.eks.v1beta1 as eksv1beta1
@@ -33,9 +35,6 @@ _items = [
                             "crossplane.io/composition-resource-name" = "accessEntry"
                         }
                         generateName = "configuration-aws-eks-karpenter-"
-                        labels = {
-                            "crossplane.io/composite" = "configuration-aws-eks-karpenter"
-                        }
                     }
                     spec = {
                         deletionPolicy = "Delete"
@@ -67,9 +66,6 @@ _items = [
                             "crossplane.io/composition-resource-name" = "InstanceNodeRoleCNIPolicy"
                         }
                         generateName = "configuration-aws-eks-karpenter-"
-                        labels = {
-                            "crossplane.io/composite" = "configuration-aws-eks-karpenter"
-                        }
                     }
                     spec = {
                         deletionPolicy = "Delete"
@@ -95,29 +91,28 @@ _items = [
                         }
                         generateName = "configuration-aws-eks-karpenter-"
                         labels = {
-                            "crossplane.io/composite" = "configuration-aws-eks-karpenter"
                             role = "karpenter"
                         }
                     }
                     spec = {
                         deletionPolicy = "Delete"
                         forProvider = {
-                            assumeRolePolicy = r"""{
-  "Version": "2012-10-17",
-  "Statement": [
-      {
-          "Effect": "Allow",
-          "Principal": {
-              "Service": [
-                  "ec2.amazonaws.com"
-              ]
-          },
-          "Action": [
-              "sts:AssumeRole"
-          ]
-      }
-  ]
-}"""
+                            assumeRolePolicy = json.encode({
+                              Version: "2012-10-17",
+                              Statement: [
+                                  {
+                                      Effect: "Allow",
+                                      Principal: {
+                                          Service: [
+                                              "ec2.amazonaws.com"
+                                          ]
+                                      },
+                                      Action: [
+                                          "sts:AssumeRole"
+                                      ]
+                                  }
+                              ]
+                            })
                         }
                         managementPolicies = ["*"]
                         providerConfigRef = {
@@ -131,9 +126,6 @@ _items = [
                             "crossplane.io/composition-resource-name" = "instanceNodeRoleECRPolicy"
                         }
                         generateName = "configuration-aws-eks-karpenter-"
-                        labels = {
-                            "crossplane.io/composite" = "configuration-aws-eks-karpenter"
-                        }
                     }
                     spec = {
                         deletionPolicy = "Delete"
@@ -158,9 +150,6 @@ _items = [
                             "crossplane.io/composition-resource-name" = "instanceNodeRoleEKSPolicy"
                         }
                         generateName = "configuration-aws-eks-karpenter-"
-                        labels = {
-                            "crossplane.io/composite" = "configuration-aws-eks-karpenter"
-                        }
                     }
                     spec = {
                         deletionPolicy = "Delete"
@@ -185,9 +174,6 @@ _items = [
                             "crossplane.io/composition-resource-name" = "instanceNodeRoleSSMPolicy"
                         }
                         generateName = "configuration-aws-eks-karpenter-"
-                        labels = {
-                            "crossplane.io/composite" = "configuration-aws-eks-karpenter"
-                        }
                     }
                     spec = {
                         deletionPolicy = "Delete"
@@ -212,9 +198,6 @@ _items = [
                             "crossplane.io/composition-resource-name" = "instanceProfile"
                         }
                         generateName = "configuration-aws-eks-karpenter-"
-                        labels = {
-                            "crossplane.io/composite" = "configuration-aws-eks-karpenter"
-                        }
                     }
                     spec = {
                         deletionPolicy = "Delete"
@@ -238,9 +221,6 @@ _items = [
                             "crossplane.io/composition-resource-name" = "karpenterNodePool"
                         }
                         generateName = "configuration-aws-eks-karpenter-"
-                        labels = {
-                            "crossplane.io/composite" = "configuration-aws-eks-karpenter"
-                        }
                     }
                     spec = {
                         deletionPolicy = "Orphan"
@@ -333,7 +313,6 @@ _items = [
                         }
                         generateName = "configuration-aws-eks-karpenter-"
                         labels = {
-                            "crossplane.io/composite" = "configuration-aws-eks-karpenter"
                             $type = "HealthEvent"
                         }
                         name = "configuration-aws-eks-karpenter-healthevent"
@@ -342,14 +321,14 @@ _items = [
                         deletionPolicy = "Delete"
                         forProvider = {
                             eventBusName = "default"
-                            eventPattern = r"""{
-  "source": [
-    "aws.health"
-  ],
-  "detail-type": [
-    "AWS Health Event"
-  ]
-}"""
+                            eventPattern = json.encode({
+                              source: [
+                                "aws.health"
+                              ],
+                              "detail-type": [
+                                "AWS Health Event"
+                              ]
+                            })
                             region = "us-west-2"
                         }
                         managementPolicies = ["*"]
@@ -366,7 +345,6 @@ _items = [
                         }
                         generateName = "configuration-aws-eks-karpenter-"
                         labels = {
-                            "crossplane.io/composite" = "configuration-aws-eks-karpenter"
                             $type = "InstanceRebalance"
                         }
                         name = "configuration-aws-eks-karpenter-instancerebalance"
@@ -375,14 +353,14 @@ _items = [
                         deletionPolicy = "Delete"
                         forProvider = {
                             eventBusName = "default"
-                            eventPattern = r"""{
-  "source": [
-    "aws.ec2"
-  ],
-  "detail-type": [
-    "EC2 Instance Rebalance Recommendation"
-  ]
-}"""
+                            eventPattern = json.encode({
+                              source: [
+                                "aws.ec2"
+                              ],
+                              "detail-type": [
+                                "EC2 Instance Rebalance Recommendation"
+                              ]
+                            })
                             region = "us-west-2"
                         }
                         managementPolicies = ["*"]
@@ -399,7 +377,6 @@ _items = [
                         }
                         generateName = "configuration-aws-eks-karpenter-"
                         labels = {
-                            "crossplane.io/composite" = "configuration-aws-eks-karpenter"
                             $type = "InstanceStateChange"
                         }
                         name = "configuration-aws-eks-karpenter-instancestatechange"
@@ -408,14 +385,14 @@ _items = [
                         deletionPolicy = "Delete"
                         forProvider = {
                             eventBusName = "default"
-                            eventPattern = r"""{
-  "source": [
-    "aws.ec2"
-  ],
-  "detail-type": [
-    "EC2 Instance State-change Notification"
-  ]
-}"""
+                            eventPattern = json.encode({
+                              source: [
+                                "aws.ec2"
+                              ],
+                              "detail-type": [
+                                "EC2 Instance State-change Notification"
+                              ]
+                            })
                             region = "us-west-2"
                         }
                         managementPolicies = ["*"]
@@ -432,7 +409,6 @@ _items = [
                         }
                         generateName = "configuration-aws-eks-karpenter-"
                         labels = {
-                            "crossplane.io/composite" = "configuration-aws-eks-karpenter"
                             $type = "SpotInterrupt"
                         }
                         name = "configuration-aws-eks-karpenter-spotinterrupt"
@@ -441,14 +417,14 @@ _items = [
                         deletionPolicy = "Delete"
                         forProvider = {
                             eventBusName = "default"
-                            eventPattern = r"""{
-  "source": [
-    "aws.ec2"
-  ],
-  "detail-type": [
-    "EC2 Spot Instance Interruption Warning"
-  ]
-}"""
+                            eventPattern = json.encode({
+                              source: [
+                                "aws.ec2"
+                              ],
+                              "detail-type": [
+                                "EC2 Spot Instance Interruption Warning"
+                              ]
+                            })
                             region = "us-west-2"
                         }
                         managementPolicies = ["*"]
@@ -463,9 +439,6 @@ _items = [
                             "crossplane.io/composition-resource-name" = "sqsQueue"
                         }
                         generateName = "configuration-aws-eks-karpenter-"
-                        labels = {
-                            "crossplane.io/composite" = "configuration-aws-eks-karpenter"
-                        }
                     }
                     spec = {
                         deletionPolicy = "Delete"

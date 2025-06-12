@@ -94,9 +94,6 @@ _items = [
                             "crossplane.io/composition-resource-name" = "podIdentity"
                         }
                         generateName = "configuration-aws-eks-karpenter-"
-                        labels = {
-                            "crossplane.io/composite" = "configuration-aws-eks-karpenter"
-                        }
                     }
                     spec = {
                         parameters = {
@@ -116,9 +113,6 @@ _items = [
                             "crossplane.io/composition-resource-name" = "karpenterNodeClass"
                         }
                         generateName = "configuration-aws-eks-karpenter-"
-                        labels = {
-                            "crossplane.io/composite" = "configuration-aws-eks-karpenter"
-                        }
                     }
                     spec = {
                         deletionPolicy = "Orphan"
@@ -179,9 +173,6 @@ _items = [
                             "crossplane.io/external-name" = "karpenter"
                         }
                         generateName = "configuration-aws-eks-karpenter-"
-                        labels = {
-                            "crossplane.io/composite" = "configuration-aws-eks-karpenter"
-                        }
                     }
                     spec = {
                         deletionPolicy = "Orphan"

@@ -3,7 +3,6 @@ import json
 
 import models.io.upbound.platform.aws.v1alpha1 as platformv1alpha1
 import models.io.upbound.aws.iam.v1beta1 as iamv1beta1
-
 import models.io.upbound.aws.cloudwatchevents.v1beta1 as cloudwatcheventsv1beta1
 import models.io.upbound.aws.sqs.v1beta1 as sqsv1beta1
 import models.io.crossplane.kubernetes.v1alpha1 as kubernetesv1alpha1
@@ -74,22 +73,22 @@ _items = [
         spec = {
             **_defaults
             forProvider = {
-                assumeRolePolicy = """{
-  "Version": "2012-10-17",
-  "Statement": [
-      {
-          "Effect": "Allow",
-          "Principal": {
-              "Service": [
-                  "ec2.amazonaws.com"
-              ]
-          },
-          "Action": [
-              "sts:AssumeRole"
-          ]
-      }
-  ]
-}"""
+                assumeRolePolicy = json.encode({
+                  Version: "2012-10-17",
+                  Statement: [
+                      {
+                          Effect: "Allow",
+                          Principal: {
+                              Service: [
+                                  "ec2.amazonaws.com"
+                              ]
+                          },
+                          Action: [
+                              "sts:AssumeRole"
+                          ]
+                      }
+                  ]
+                })
             }
             providerConfigRef = {
                 name = _providerConfigName
@@ -98,9 +97,7 @@ _items = [
     }
     # Attach EKS Policy
     iamv1beta1.RolePolicyAttachment {
-        metadata = {
-            **_metadata("instanceNodeRoleEKSPolicy")
-        }
+        metadata = _metadata("instanceNodeRoleEKSPolicy")
         spec = {
             **_defaults
             forProvider = {
@@ -114,9 +111,7 @@ _items = [
     }
     # Attach CNI Policy
     iamv1beta1.RolePolicyAttachment {
-        metadata = {
-            **_metadata("InstanceNodeRoleCNIPolicy")
-        }
+        metadata = _metadata("InstanceNodeRoleCNIPolicy")
         spec = {
             **_defaults
             forProvider = {
@@ -133,9 +128,7 @@ _items = [
     }
     # Attach ECR Policy
     iamv1beta1.RolePolicyAttachment {
-        metadata = {
-            **_metadata("instanceNodeRoleECRPolicy")
-        }
+        metadata = _metadata("instanceNodeRoleECRPolicy")
         spec = {
             **_defaults
             forProvider = {
@@ -149,9 +142,7 @@ _items = [
     }
     # Attach SSM Policy
     iamv1beta1.RolePolicyAttachment {
-        metadata = {
-            **_metadata("instanceNodeRoleSSMPolicy")
-        }
+        metadata = _metadata("instanceNodeRoleSSMPolicy")
         spec = {
             **_defaults
             forProvider = {
@@ -165,9 +156,7 @@ _items = [
     }
     # Create Instance Profile
     iamv1beta1.InstanceProfile {
-        metadata = {
-            **_metadata("instanceProfile")
-        }
+        metadata = _metadata("instanceProfile")
         spec = {
             **_defaults
             forProvider = {
@@ -187,9 +176,7 @@ _items = [
     {
         apiVersion = "eks.aws.upbound.io/v1beta1"
         kind = "AccessEntry"
-        metadata = {
-            **_metadata("accessEntry")
-        }
+        metadata = _metadata("accessEntry")
         spec = {
             **_defaults
             forProvider = {
@@ -219,9 +206,7 @@ _items = [
     }
     if _statusClusterName and _statusSqsQueueArn and _statusInstanceNodeRoleArn and _statusAccountId:
         platformv1alpha1.XPodIdentity{
-            metadata = {
-                **_metadata("podIdentity")
-            }
+            metadata = _metadata("podIdentity")
             spec = {
                 parameters = {
                     providerConfigName = oxr.spec.parameters.providerConfigName
@@ -436,9 +421,7 @@ _items = [
 
     # Create SQS Queue for Karpenter
     sqsv1beta1.Queue {
-        metadata = {
-            **_metadata("sqsQueue")
-        }
+        metadata = _metadata("sqsQueue")
         spec = {
             **_defaults
             forProvider = {
@@ -464,14 +447,14 @@ _items = [
             forProvider = {
                 region = _region
                 eventBusName = "default"
-                eventPattern = """{
-  "source": [
-    "aws.health"
-  ],
-  "detail-type": [
-    "AWS Health Event"
-  ]
-}"""
+                eventPattern = json.encode({
+                  source: [
+                    "aws.health"
+                  ],
+                  "detail-type": [
+                    "AWS Health Event"
+                  ]
+                })
             }
             providerConfigRef = {
                 name = _providerConfigName
@@ -493,14 +476,14 @@ _items = [
             forProvider = {
                 region = _region
                 eventBusName = "default"
-                eventPattern = """{
-  "source": [
-    "aws.ec2"
-  ],
-  "detail-type": [
-    "EC2 Instance Rebalance Recommendation"
-  ]
-}"""
+                eventPattern = json.encode({
+                  source: [
+                    "aws.ec2"
+                  ],
+                  "detail-type": [
+                    "EC2 Instance Rebalance Recommendation"
+                  ]
+                })
             }
             providerConfigRef = {
                 name = _providerConfigName
@@ -522,14 +505,14 @@ _items = [
             forProvider = {
                 region = _region
                 eventBusName = "default"
-                eventPattern = """{
-  "source": [
-    "aws.ec2"
-  ],
-  "detail-type": [
-    "EC2 Instance State-change Notification"
-  ]
-}"""
+                eventPattern = json.encode({
+                  source: [
+                    "aws.ec2"
+                  ],
+                  "detail-type": [
+                    "EC2 Instance State-change Notification"
+                  ]
+                })
             }
             providerConfigRef = {
                 name = _providerConfigName
@@ -551,14 +534,14 @@ _items = [
             forProvider = {
                 region = _region
                 eventBusName = "default"
-                eventPattern = """{
-  "source": [
-    "aws.ec2"
-  ],
-  "detail-type": [
-    "EC2 Spot Instance Interruption Warning"
-  ]
-}"""
+                eventPattern = json.encode({
+                  source: [
+                    "aws.ec2"
+                  ],
+                  "detail-type": [
+                    "EC2 Spot Instance Interruption Warning"
+                  ]
+                })
             }
             providerConfigRef = {
                 name = _providerConfigName
