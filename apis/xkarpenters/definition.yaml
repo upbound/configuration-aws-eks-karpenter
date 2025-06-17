@@ -3,8 +3,6 @@ kind: CompositeResourceDefinition
 metadata:
   name: xkarpenters.aws.platform.upbound.io
 spec:
-  defaultCompositionRef:
-    name: pat.xkarpenters.aws.platform.upbound.io
   group: aws.platform.upbound.io
   names:
     kind: XKarpenter

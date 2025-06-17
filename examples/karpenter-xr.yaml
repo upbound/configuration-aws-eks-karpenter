@@ -2,9 +2,6 @@ apiVersion: aws.platform.upbound.io/v1alpha1
 kind: XKarpenter
 metadata:
   name: configuration-aws-eks-karpenter
-  annotations:
-    render.crossplane.io/composition-path: apis/pat/composition.yaml
-    render.crossplane.io/function-path: examples/functions.yaml
 spec:
   parameters:
     clusterNameSelector:
