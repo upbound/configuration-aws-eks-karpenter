@@ -55,6 +55,10 @@ _statusInstanceProfileName = Undefined
 if _ocds.instanceProfile?.Resource?.status?.atProvider?.arn:
     _statusInstanceProfileName = regex.replace(_ocds.instanceProfile.Resource.status.atProvider.arn, "arn:aws:iam::\\d+:instance-profile/(.+)", "$1")
 
+_statusRolepodIdentityArn = Undefined
+if _ocds.podIdentity?.Resource?.status?.podIdentity?.roleArn:
+    _statusRolepodIdentityArn = _ocds.podIdentity?.Resource?.status?.podIdentity?.roleArn
+
 _defaults = {
     deletionPolicy = oxr.spec.parameters.deletionPolicy or "Delete"
     providerConfigRef.name = oxr.spec.parameters.providerConfigName or "default"
@@ -549,7 +553,7 @@ _items = [
         }
     }
     # Create Karpenter Helm Chart Release
-    if _statusClusterName and _ocds.sqsQueue?.Resource?.status?.atProvider?.name:
+    if _statusClusterName and _ocds.sqsQueue?.Resource?.status?.atProvider?.name and _statusRolepodIdentityArn:
         {
             apiVersion = "helm.crossplane.io/v1beta1"
             kind = "Release"
@@ -574,6 +578,14 @@ _items = [
                         settings = {
                             clusterName = _statusClusterName
                             interruptionQueueName = _ocds.sqsQueue?.Resource?.status?.atProvider?.name
+                        }
+                        controller = {
+                            env = [
+                                {
+                                    name = "AWS_REGION"
+                                    value = _region
+                                }
+                            ]
                         }
                     }
                 }
