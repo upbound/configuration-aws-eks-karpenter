@@ -25,7 +25,7 @@ _id = oxr.spec.parameters.id
 _region = oxr.spec.parameters.region
 _providerConfigName = oxr.spec.parameters.providerConfigName or "default"
 # Generate resource names
-_sqsQueueName = "${_id}-karpenter"
+_sqsQueueName = "{}-karpenter-queue".format(_id)
 _healthEventName = "${_id}-healthevent"
 _instanceRebalanceName = "${_id}-instancerebalance"
 _instanceStateChangeName = "${_id}-instancestatechange"
@@ -567,7 +567,7 @@ _items = [
                     chart = {
                         name = "karpenter"
                         repository = "oci://public.ecr.aws/karpenter"
-                        version = "1.0.0"
+                        version = "1.8.1"
                     }
                     namespace = "karpenter"
                     values = {

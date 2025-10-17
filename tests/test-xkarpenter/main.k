@@ -444,7 +444,7 @@ _items = [
                         deletionPolicy = "Delete"
                         forProvider = {
                             messageRetentionSeconds = 300
-                            name = "configuration-aws-eks-karpenter-karpenter"
+                            name = "configuration-aws-eks-karpenter-karpenter-queue"
                             region = "us-west-2"
                         }
                         managementPolicies = ["*"]

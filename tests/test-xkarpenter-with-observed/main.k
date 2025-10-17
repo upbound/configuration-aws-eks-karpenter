@@ -29,8 +29,8 @@ observedResources = [
         }
         status = {
             atProvider = {
-                arn = "arn:aws:sqs:us-west-2:609897127049:configuration-aws-eks-karpenter-karpenter"
-                name = "configuration-aws-eks-karpenter-karpenter"
+                arn = "arn:aws:sqs:us-west-2:609897127049:configuration-aws-eks-karpenter-karpenter-queue"
+                name = "configuration-aws-eks-karpenter-karpenter-queue"
             }
         }
     }
@@ -181,13 +181,13 @@ _items = [
                             chart = {
                                 name = "karpenter"
                                 repository = "oci://public.ecr.aws/karpenter"
-                                version = "1.0.0"
+                                version = "1.8.1"
                             }
                             namespace = "karpenter"
                             values = {
                                 settings = {
                                     clusterName = "configuration-aws-eks-karpenter-w8989"
-                                    interruptionQueueName = "configuration-aws-eks-karpenter-karpenter"
+                                    interruptionQueueName = "configuration-aws-eks-karpenter-karpenter-queue"
                                 }
                             }
                         }
