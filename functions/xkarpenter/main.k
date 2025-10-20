@@ -25,7 +25,7 @@ _id = oxr.spec.parameters.id
 _region = oxr.spec.parameters.region
 _providerConfigName = oxr.spec.parameters.providerConfigName or "default"
 # Generate resource names
-_sqsQueueName = "${_id}-karpenter"
+_sqsQueueName = "{}-karpenter-queue".format(_id)
 _healthEventName = "${_id}-healthevent"
 _instanceRebalanceName = "${_id}-instancerebalance"
 _instanceStateChangeName = "${_id}-instancestatechange"
@@ -54,6 +54,10 @@ if _ocds.instanceNodeRole?.Resource?.status?.atProvider?.arn:
 _statusInstanceProfileName = Undefined
 if _ocds.instanceProfile?.Resource?.status?.atProvider?.arn:
     _statusInstanceProfileName = regex.replace(_ocds.instanceProfile.Resource.status.atProvider.arn, "arn:aws:iam::\\d+:instance-profile/(.+)", "$1")
+
+_statusRolepodIdentityArn = Undefined
+if _ocds.podIdentity?.Resource?.status?.podIdentity?.roleArn:
+    _statusRolepodIdentityArn = _ocds.podIdentity?.Resource?.status?.podIdentity?.roleArn
 
 _defaults = {
     deletionPolicy = oxr.spec.parameters.deletionPolicy or "Delete"
@@ -549,7 +553,7 @@ _items = [
         }
     }
     # Create Karpenter Helm Chart Release
-    if _statusClusterName and _ocds.sqsQueue?.Resource?.status?.atProvider?.name:
+    if _statusClusterName and _ocds.sqsQueue?.Resource?.status?.atProvider?.name and _statusRolepodIdentityArn:
         {
             apiVersion = "helm.crossplane.io/v1beta1"
             kind = "Release"
@@ -567,13 +571,21 @@ _items = [
                     chart = {
                         name = "karpenter"
                         repository = "oci://public.ecr.aws/karpenter"
-                        version = "1.0.0"
+                        version = "1.8.1"
                     }
                     namespace = "karpenter"
                     values = {
                         settings = {
                             clusterName = _statusClusterName
                             interruptionQueueName = _ocds.sqsQueue?.Resource?.status?.atProvider?.name
+                        }
+                        controller = {
+                            env = [
+                                {
+                                    name = "AWS_REGION"
+                                    value = _region
+                                }
+                            ]
                         }
                     }
                 }
