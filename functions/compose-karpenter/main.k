@@ -97,10 +97,6 @@ _items = [
                   ]
                 })
             }
-            providerConfigRef = {
-                name = _providerConfigName
-                kind = "ProviderConfig"
-            }
         }
     }
     # Attach EKS Policy
@@ -128,10 +124,6 @@ _items = [
                     matchControllerRef = True
                     matchLabels = {"role": "karpenter"}
                 }
-            }
-            providerConfigRef = {
-                name = _providerConfigName
-                kind = "ProviderConfig"
             }
         }
     }
@@ -174,10 +166,6 @@ _items = [
                     matchLabels = {"role": "karpenter"}
                 }
             }
-            providerConfigRef = {
-                name = _providerConfigName
-                kind = "ProviderConfig"
-            }
         }
     }
     # Create AccessEntry for Karpenter role
@@ -208,15 +196,10 @@ _items = [
                     matchLabels = {"role": "karpenter"}
                 }
             }
-            managementPolicies = ["*"]
-            providerConfigRef = {
-                name = _providerConfigName
-                kind = "ProviderConfig"
-            }
         }
     }
     if _statusClusterName and _statusSqsQueueArn and _statusInstanceNodeRoleArn and _statusAccountId:
-        platformv1alpha1.XPodIdentity{
+        platformv1alpha1.PodIdentity{
             metadata = _metadata("podIdentity")
             spec = {
                 parameters = {
@@ -455,6 +438,7 @@ _items = [
             name = _healthEventName
         }
         spec = {
+            **_defaults
             forProvider = {
                 region = _region
                 eventBusName = "default"
@@ -466,10 +450,6 @@ _items = [
                     "AWS Health Event"
                   ]
                 })
-            }
-            providerConfigRef = {
-                name = _providerConfigName
-                kind = "ProviderConfig"
             }
         }
     }
@@ -485,6 +465,7 @@ _items = [
             name = _instanceRebalanceName
         }
         spec = {
+            **_defaults
             forProvider = {
                 region = _region
                 eventBusName = "default"
@@ -496,10 +477,6 @@ _items = [
                     "EC2 Instance Rebalance Recommendation"
                   ]
                 })
-            }
-            providerConfigRef = {
-                name = _providerConfigName
-                kind = "ProviderConfig"
             }
         }
     }
@@ -515,6 +492,7 @@ _items = [
             name = _instanceStateChangeName
         }
         spec = {
+            **_defaults
             forProvider = {
                 region = _region
                 eventBusName = "default"
@@ -526,10 +504,6 @@ _items = [
                     "EC2 Instance State-change Notification"
                   ]
                 })
-            }
-            providerConfigRef = {
-                name = _providerConfigName
-                kind = "ProviderConfig"
             }
         }
     }
@@ -545,6 +519,7 @@ _items = [
             name = _spotInterruptName
         }
         spec = {
+            **_defaults
             forProvider = {
                 region = _region
                 eventBusName = "default"
@@ -556,10 +531,6 @@ _items = [
                     "EC2 Spot Instance Interruption Warning"
                   ]
                 })
-            }
-            providerConfigRef = {
-                name = _providerConfigName
-                kind = "ProviderConfig"
             }
         }
     }
@@ -602,6 +573,7 @@ _items = [
                 }
                 providerConfigRef = {
                     name = _id
+                    kind = "ProviderConfig"
                 }
             }
         }

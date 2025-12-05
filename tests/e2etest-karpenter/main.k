@@ -41,7 +41,7 @@ _items = [
                         }
                     }
                 },
-                platformawsv1alpha1.XNetwork{
+                platformawsv1alpha1.Network{
                     metadata = {
                         name = "configuration-aws-eks-karpenter"
                     }
@@ -52,7 +52,7 @@ _items = [
                         }
                     }
                 },
-                platformawsv1alpha1.XEKS{
+                platformawsv1alpha1.EKS{
                     metadata = {
                         name = "configuration-aws-eks-karpenter"
                         labels = {
@@ -72,10 +72,6 @@ _items = [
                                 count = 3
                                 instanceType = "t3.small"
                             }
-                        }
-                        writeConnectionSecretToRef = {
-                            name = "configuration-aws-eks-karpenter-kubeconfig"
-                            namespace = "upbound-system"
                         }
                     }
                 }

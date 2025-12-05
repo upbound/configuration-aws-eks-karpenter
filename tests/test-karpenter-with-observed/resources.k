@@ -82,7 +82,7 @@ _Karpenter = platformawsv1alpha1.Karpenter {
         }
     }
 }
-_xPodIdentity = platformawsv1alpha1.XPodIdentity {
+_xPodIdentity = platformawsv1alpha1.PodIdentity {
     metadata = {
         annotations = {
             "crossplane.io/composition-resource-name" = "podIdentity"

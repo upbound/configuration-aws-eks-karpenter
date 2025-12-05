@@ -126,8 +126,6 @@ spec:
                   required:
                     - id
                     - region
-                    - managementPolicies
-                    - providerConfigName
               required:
                 - parameters
             status:

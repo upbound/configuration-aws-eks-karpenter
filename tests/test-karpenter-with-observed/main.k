@@ -11,7 +11,7 @@ observedResources_for_test_1 = [
 ]
 
 observedResources_for_test_2 = observedResources_for_test_1 + [ 
-    platformawsv1alpha1.XPodIdentity {
+    platformawsv1alpha1.PodIdentity {
         **resources._xPodIdentity
         status: {
             conditions: conditions._readyConditions
