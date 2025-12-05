@@ -13,6 +13,7 @@ _items = [
                 platformawsv1alpha1.Karpenter{
                     metadata = {
                         name = "configuration-aws-eks-karpenter"
+                        namespace = "default"
                     }
                     spec = {
                         parameters = {
@@ -29,7 +30,10 @@ _items = [
             ]
             extraResources: [
                 awsv1beta1.ProviderConfig{
-                    metadata.name = "default"
+                    metadata = {
+                        name = "default"
+                        namespace = "default"
+                    }
                     spec = {
                         credentials = {
                             source = "Upbound"
@@ -44,6 +48,7 @@ _items = [
                 platformawsv1alpha1.Network{
                     metadata = {
                         name = "configuration-aws-eks-karpenter"
+                        namespace = "default"
                     }
                     spec = {
                         parameters = {
@@ -55,6 +60,7 @@ _items = [
                 platformawsv1alpha1.EKS{
                     metadata = {
                         name = "configuration-aws-eks-karpenter"
+                        namespace = "default"
                         labels = {
                             "xeks.aws.platform.upbound.io/cluster-id" = "configuration-aws-eks-karpenter"
                         }
