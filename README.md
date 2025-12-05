@@ -11,7 +11,7 @@ The core components of a custom API in an Upbound Project include:
 
 In this configuration, the EKS Karpenter API contains:
 - **An [AWS EKS Karpenter](/apis/karpenters/definition.yaml) custom resource type**
-- **Composition configuration:** Located in [/apis/karpenters/composition.yaml](/apis/karpenters/composition.yaml), it provisions Karpenter resources in the `upbound-system` namespace
+- **Composition configuration:** Located in [/apis/karpenters/composition.yaml](/apis/karpenters/composition.yaml), it provision `Karpenter` resource to namespace of your choice.
 - **Embedded function:** Implements Karpenter resource provisioning logic in [/functions/compose-karpenter/](/functions/compose-karpenter/)
 
 ## Testing
