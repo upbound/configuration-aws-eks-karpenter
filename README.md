@@ -10,15 +10,15 @@ The core components of a custom API in an Upbound Project include:
 - **Embedded Function(s):** Encapsulates the Composition logic
 
 In this configuration, the EKS Karpenter API contains:
-- **An [AWS EKS Karpenter](/apis/xkarpenters/definition.yaml) custom resource type**
-- **Composition configuration:** Located in [/apis/xkarpenters/composition.yaml](/apis/xkarpenters/composition.yaml), it provisions Karpenter resources in the `upbound-system` namespace
-- **Embedded function:** Implements Karpenter resource provisioning logic in [/functions/xkarpenter/](/functions/xkarpenter/)
+- **An [AWS EKS Karpenter](/apis/karpenters/definition.yaml) custom resource type**
+- **Composition configuration:** Located in [/apis/karpenters/composition.yaml](/apis/karpenters/composition.yaml), it provision `Karpenter` resource to namespace of your choice.
+- **Embedded function:** Implements Karpenter resource provisioning logic in [/functions/compose-karpenter/](/functions/compose-karpenter/)
 
 ## Testing
 
 Test the configuration using:
-- `up composition render apis/xkarpenters/composition.yaml examples/karpenter-xr.yaml` to render the composition
-- `up test run tests/test-xkarpenter` to run composition tests
+- `up composition render apis/karpenters/composition.yaml examples/karpenter-xr.yaml` to render the composition
+- `up test run tests/test-karpenter` to run composition tests
 - `up test run tests/* --e2e` to run end-to-end tests
 
 ## Deployment

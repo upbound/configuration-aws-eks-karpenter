@@ -1,4 +1,3 @@
-import models.io.crossplane.kubernetes.v1alpha1 as kubernetesv1alpha1
 import models.io.upbound.dev.meta.v1alpha1 as metav1alpha1
 import models.io.upbound.platform.aws.v1alpha1 as platformawsv1alpha1
 import resources
@@ -12,7 +11,7 @@ observedResources_for_test_1 = [
 ]
 
 observedResources_for_test_2 = observedResources_for_test_1 + [ 
-    platformawsv1alpha1.XPodIdentity {
+    platformawsv1alpha1.PodIdentity {
         **resources._xPodIdentity
         status: {
             conditions: conditions._readyConditions
@@ -25,7 +24,7 @@ observedResources_for_test_2 = observedResources_for_test_1 + [
 ]
 
 _assertResources_for_test_1 = [
-    resources._xKarpenter,
+    resources._Karpenter,
     resources._nodeClass,
     resources._xPodIdentity
 ]
@@ -35,26 +34,26 @@ _assertResources_for_test_2 = _assertResources_for_test_1 + [
 ]
 
 _test1 = metav1alpha1.CompositionTest {
-    metadata.name: "xkarpenter"
+    metadata.name: "Karpenter-with-observed"
     spec = {
         assertResources: _assertResources_for_test_1
         observedResources = observedResources_for_test_1
-        compositionPath = "apis/xkarpenters/composition.yaml"
+        compositionPath = "apis/karpenters/composition.yaml"
         xrPath = "examples/karpenter-xr.yaml"
-        xrdPath = "apis/xkarpenters/definition.yaml"
+        xrdPath = "apis/karpenters/definition.yaml"
         timeoutSeconds = 60
         validate = False
     }
 }
 
 _test2 = metav1alpha1.CompositionTest {
-    metadata.name: "xkarpenter-with-observed"
+    metadata.name: "karpenter-with-observed"
     spec = {
         assertResources: _assertResources_for_test_2
         observedResources = observedResources_for_test_2
-        compositionPath = "apis/xkarpenters/composition.yaml"
+        compositionPath = "apis/karpenters/composition.yaml"
         xrPath = "examples/karpenter-xr.yaml"
-        xrdPath = "apis/xkarpenters/definition.yaml"
+        xrdPath = "apis/karpenters/definition.yaml"
         timeoutSeconds = 60
         validate = False
     }

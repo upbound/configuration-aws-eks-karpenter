@@ -1,5 +1,4 @@
-import models.io.crossplane.kubernetes.v1alpha1 as kubernetesv1alpha1
-import models.io.upbound.dev.meta.v1alpha1 as metav1alpha1
+import models.io.crossplane.kubernetesm.v1alpha1 as kubernetesv1alpha1
 import models.io.upbound.platform.aws.v1alpha1 as platformawsv1alpha1
 
 _accessEntry = {
@@ -66,7 +65,7 @@ _instanceProfile = {
 }
 
 ### Aserted Resources
-_xKarpenter = platformawsv1alpha1.XKarpenter {
+_Karpenter = platformawsv1alpha1.Karpenter {
     metadata = {
         name = "configuration-aws-eks-karpenter"
     }
@@ -83,7 +82,7 @@ _xKarpenter = platformawsv1alpha1.XKarpenter {
         }
     }
 }
-_xPodIdentity = platformawsv1alpha1.XPodIdentity {
+_xPodIdentity = platformawsv1alpha1.PodIdentity {
     metadata = {
         annotations = {
             "crossplane.io/composition-resource-name" = "podIdentity"
@@ -110,7 +109,7 @@ _nodeClass = kubernetesv1alpha1.Object {
         generateName = "configuration-aws-eks-karpenter-"
     }
     spec = {
-        deletionPolicy = "Orphan"
+        managementPolicies = ["Create", "Observe", "Update"]
         forProvider = {
             manifest = {
                 apiVersion = "karpenter.k8s.aws/v1"
@@ -150,16 +149,16 @@ _nodeClass = kubernetesv1alpha1.Object {
                 }
             }
         }
-        managementPolicy = "Default"
         providerConfigRef = {
             name = "configuration-aws-eks-karpenter"
+            kind = "ProviderConfig"
         }
         watch = False
     }
 }
 
 _helmResources = {
-    apiVersion = "helm.crossplane.io/v1beta1"
+    apiVersion = "helm.m.crossplane.io/v1beta1"
     kind = "Release"
     metadata = {
         annotations = {
@@ -169,7 +168,7 @@ _helmResources = {
         generateName = "configuration-aws-eks-karpenter-"
     }
     spec = {
-        deletionPolicy = "Orphan"
+        managementPolicies = ["Create", "Observe", "Update"]
         forProvider = {
             wait = True
             chart = {

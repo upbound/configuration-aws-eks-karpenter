@@ -1,16 +1,16 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: xkarpenters.aws.platform.upbound.io
+  name: karpenters.aws.platform.upbound.io
 spec:
   compositeTypeRef:
     apiVersion: aws.platform.upbound.io/v1alpha1
-    kind: XKarpenter
+    kind: Karpenter
   mode: Pipeline
   pipeline:
   - functionRef:
-      name: upbound-configuration-aws-eks-karpenterxkarpenter
-    step: xkarpenter
+      name: upbound-configuration-aws-eks-karpentercompose-karpenter
+    step: ComposeKarpenter
   - functionRef:
       name: crossplane-contrib-function-auto-ready
     step: crossplane-contrib-function-auto-ready

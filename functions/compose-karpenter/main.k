@@ -2,12 +2,12 @@ import regex
 import json
 
 import models.io.upbound.platform.aws.v1alpha1 as platformv1alpha1
-import models.io.upbound.aws.iam.v1beta1 as iamv1beta1
-import models.io.upbound.aws.cloudwatchevents.v1beta1 as cloudwatcheventsv1beta1
-import models.io.upbound.aws.sqs.v1beta1 as sqsv1beta1
-import models.io.crossplane.kubernetes.v1alpha1 as kubernetesv1alpha1
+import models.io.upbound.awsm.iam.v1beta1 as iamv1beta1
+import models.io.upbound.awsm.cloudwatchevents.v1beta1 as cloudwatcheventsv1beta1
+import models.io.upbound.awsm.sqs.v1beta1 as sqsv1beta1
+import models.io.crossplane.kubernetesm.v1alpha1 as kubernetesv1alpha1
 
-oxr = platformv1alpha1.XKarpenter {**option("params").oxr}
+oxr = platformv1alpha1.Karpenter {**option("params").oxr}
 # observed composed resources
 _ocds = option("params").ocds
 # desired composite resource
@@ -60,8 +60,11 @@ if _ocds.podIdentity?.Resource?.status?.podIdentity?.roleArn:
     _statusRolepodIdentityArn = _ocds.podIdentity?.Resource?.status?.podIdentity?.roleArn
 
 _defaults = {
-    deletionPolicy = oxr.spec.parameters.deletionPolicy or "Delete"
-    providerConfigRef.name = oxr.spec.parameters.providerConfigName or "default"
+    managementPolicies = oxr.spec.parameters.managementPolicies or ["*"]
+    providerConfigRef = {
+        kind = "ProviderConfig"
+        name = oxr.spec.parameters.providerConfigName or "default"
+    }
 }
 
 _items = [
@@ -94,9 +97,6 @@ _items = [
                   ]
                 })
             }
-            providerConfigRef = {
-                name = _providerConfigName
-            }
         }
     }
     # Attach EKS Policy
@@ -124,9 +124,6 @@ _items = [
                     matchControllerRef = True
                     matchLabels = {"role": "karpenter"}
                 }
-            }
-            providerConfigRef = {
-                name = _providerConfigName
             }
         }
     }
@@ -169,16 +166,13 @@ _items = [
                     matchLabels = {"role": "karpenter"}
                 }
             }
-            providerConfigRef = {
-                name = _providerConfigName
-            }
         }
     }
     # Create AccessEntry for Karpenter role
     # Note: If we use type here, clusterNameSelector will conflict and
     # we cannot forward the selector to the object
     {
-        apiVersion = "eks.aws.upbound.io/v1beta1"
+        apiVersion = "eks.aws.m.upbound.io/v1beta1"
         kind = "AccessEntry"
         metadata = _metadata("accessEntry")
         spec = {
@@ -202,14 +196,10 @@ _items = [
                     matchLabels = {"role": "karpenter"}
                 }
             }
-            managementPolicies = ["*"]
-            providerConfigRef = {
-                name = _providerConfigName
-            }
         }
     }
     if _statusClusterName and _statusSqsQueueArn and _statusInstanceNodeRoleArn and _statusAccountId:
-        platformv1alpha1.XPodIdentity{
+        platformv1alpha1.PodIdentity{
             metadata = _metadata("podIdentity")
             spec = {
                 parameters = {
@@ -448,6 +438,7 @@ _items = [
             name = _healthEventName
         }
         spec = {
+            **_defaults
             forProvider = {
                 region = _region
                 eventBusName = "default"
@@ -459,9 +450,6 @@ _items = [
                     "AWS Health Event"
                   ]
                 })
-            }
-            providerConfigRef = {
-                name = _providerConfigName
             }
         }
     }
@@ -477,6 +465,7 @@ _items = [
             name = _instanceRebalanceName
         }
         spec = {
+            **_defaults
             forProvider = {
                 region = _region
                 eventBusName = "default"
@@ -488,9 +477,6 @@ _items = [
                     "EC2 Instance Rebalance Recommendation"
                   ]
                 })
-            }
-            providerConfigRef = {
-                name = _providerConfigName
             }
         }
     }
@@ -506,6 +492,7 @@ _items = [
             name = _instanceStateChangeName
         }
         spec = {
+            **_defaults
             forProvider = {
                 region = _region
                 eventBusName = "default"
@@ -517,9 +504,6 @@ _items = [
                     "EC2 Instance State-change Notification"
                   ]
                 })
-            }
-            providerConfigRef = {
-                name = _providerConfigName
             }
         }
     }
@@ -535,6 +519,7 @@ _items = [
             name = _spotInterruptName
         }
         spec = {
+            **_defaults
             forProvider = {
                 region = _region
                 eventBusName = "default"
@@ -547,15 +532,12 @@ _items = [
                   ]
                 })
             }
-            providerConfigRef = {
-                name = _providerConfigName
-            }
         }
     }
     # Create Karpenter Helm Chart Release
     if _statusClusterName and _ocds.sqsQueue?.Resource?.status?.atProvider?.name and _statusRolepodIdentityArn:
         {
-            apiVersion = "helm.crossplane.io/v1beta1"
+            apiVersion = "helm.m.crossplane.io/v1beta1"
             kind = "Release"
             metadata = {
                 **_metadata("karpenterChart")
@@ -565,7 +547,7 @@ _items = [
                 }
             }
             spec = {
-                deletionPolicy = "Orphan"
+                managementPolicies = ["Create", "Observe", "Update"]
                 forProvider = {
                     wait = True
                     chart = {
@@ -591,6 +573,7 @@ _items = [
                 }
                 providerConfigRef = {
                     name = _id
+                    kind = "ProviderConfig"
                 }
             }
         }
@@ -602,7 +585,7 @@ _items = [
                 generateName = "${_id}-"
             }
             spec = {
-                deletionPolicy = "Orphan"
+                managementPolicies = ["Create", "Observe", "Update"]
                 forProvider = {
                     manifest = {
                         apiVersion = "karpenter.k8s.aws/v1"
@@ -644,6 +627,7 @@ _items = [
                 }
                 providerConfigRef = {
                     name = _id
+                    kind = "ProviderConfig"
                 }
             }
         }
@@ -654,7 +638,7 @@ _items = [
             generateName = "${_id}-"
         }
         spec = {
-            deletionPolicy = "Orphan"
+            managementPolicies = ["Create", "Observe", "Update"]
             forProvider = {
                 manifest = {
                     apiVersion = "karpenter.sh/v1"
@@ -731,6 +715,7 @@ _items = [
             }
             providerConfigRef = {
                 name = _id
+                kind = "ProviderConfig"
             }
         }
     }

@@ -1,4 +1,4 @@
-apiVersion: meta.dev.upbound.io/v1alpha1
+apiVersion: meta.dev.upbound.io/v2alpha1
 kind: Project
 metadata:
   name: configuration-aws-eks-karpenter
@@ -7,31 +7,31 @@ spec:
   - apiVersion: pkg.crossplane.io/v1
     kind: Configuration
     package: xpkg.upbound.io/upbound/configuration-aws-eks-pod-identity
-    version: v0.8.4
+    version: v2.0.0
   - apiVersion: pkg.crossplane.io/v1
     kind: Provider
     package: xpkg.upbound.io/upbound/provider-aws-eks
-    version: v1
+    version: v2
   - apiVersion: pkg.crossplane.io/v1
     kind: Provider
     package: xpkg.upbound.io/upbound/provider-aws-iam
-    version: v1
+    version: v2
   - apiVersion: pkg.crossplane.io/v1
     kind: Provider
     package: xpkg.upbound.io/upbound/provider-aws-sqs
-    version: v1
+    version: v2
   - apiVersion: pkg.crossplane.io/v1
     kind: Provider
     package: xpkg.upbound.io/upbound/provider-aws-cloudwatchevents
-    version: v1
+    version: v2
   - apiVersion: pkg.crossplane.io/v1
     kind: Provider
     package: xpkg.upbound.io/upbound/provider-helm
-    version: v0
+    version: v1
   - apiVersion: pkg.crossplane.io/v1
     kind: Provider
     package: xpkg.upbound.io/upbound/provider-kubernetes
-    version: v0
+    version: v1
   - apiVersion: pkg.crossplane.io/v1
     kind: Function
     package: xpkg.upbound.io/crossplane-contrib/function-auto-ready
@@ -42,7 +42,7 @@ spec:
   license: Apache-2.0
   maintainer: Upbound <support@upbound.io>
   readme: |
-    This configuration deploys EKS Karpenter clusters with properties like clusterName, region, and deletionPolicy, all aimed at customizing AWS resource deployment in Crossplane.
+    This configuration deploys EKS Karpenter clusters with properties like clusterName, region, and managementPolicies, all aimed at customizing AWS resource deployment in Crossplane.
     This bundles resources like IAM roles, SQS queues, and CloudWatch event rules using a pipeline of patch-and-transform steps to automate deployment of a scalable Kubernetes cluster on AWS.
   repository: xpkg.upbound.io/upbound/configuration-aws-eks-karpenter
   source: github.com/upbound/configuration-aws-eks-karpenter

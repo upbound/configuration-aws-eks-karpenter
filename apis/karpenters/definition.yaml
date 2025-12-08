@@ -1,12 +1,13 @@
-apiVersion: apiextensions.crossplane.io/v1
+apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
 metadata:
-  name: xkarpenters.aws.platform.upbound.io
+  name: karpenters.aws.platform.upbound.io
 spec:
+  scope: Namespaced
   group: aws.platform.upbound.io
   names:
-    kind: XKarpenter
-    plural: xkarpenters
+    kind: Karpenter
+    plural: karpenters
   versions:
     - name: v1alpha1
       served: true
@@ -106,13 +107,18 @@ spec:
                     region:
                       type: string
                       description: Region is the region you'd like your resource to be created in.
-                    deletionPolicy:
-                      description: Delete the external resources when the Claim/XR is deleted. Defaults to Delete
-                      enum:
-                        - Delete
-                        - Orphan
-                      type: string
-                      default: Delete
+                    managementPolicies:
+                      description: ManagementPolicies for the RDS resources. Defaults to ["*"] which includes all operations (Create, Observe, Update, Delete). To orphan resources on deletion, use ["Create", "Observe", "Update"].
+                      type: array
+                      items:
+                        type: string
+                        enum:
+                          - "*"
+                          - Create
+                          - Observe
+                          - Update
+                          - Delete
+                      default: ["*"]                      
                     providerConfigName:
                       description: Crossplane ProviderConfig to use for provisioning this resources
                       type: string
@@ -120,8 +126,6 @@ spec:
                   required:
                     - id
                     - region
-                    - deletionPolicy
-                    - providerConfigName
               required:
                 - parameters
             status:

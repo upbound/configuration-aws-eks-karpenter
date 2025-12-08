@@ -1,19 +1,19 @@
 import json
 
-import models.io.crossplane.kubernetes.v1alpha1 as kubernetesv1alpha1
-import models.io.upbound.aws.cloudwatchevents.v1beta1 as cloudwatcheventsv1beta1
-import models.io.upbound.aws.eks.v1beta1 as eksv1beta1
-import models.io.upbound.aws.iam.v1beta1 as iamv1beta1
-import models.io.upbound.aws.sqs.v1beta1 as sqsv1beta1
+import models.io.crossplane.kubernetesm.v1alpha1 as kubernetesv1alpha1
+import models.io.upbound.awsm.cloudwatchevents.v1beta1 as cloudwatcheventsv1beta1
+import models.io.upbound.awsm.eks.v1beta1 as eksv1beta1
+import models.io.upbound.awsm.iam.v1beta1 as iamv1beta1
+import models.io.upbound.awsm.sqs.v1beta1 as sqsv1beta1
 import models.io.upbound.dev.meta.v1alpha1 as metav1alpha1
 import models.io.upbound.platform.aws.v1alpha1 as platformv1alpha1
 
 _items = [
     metav1alpha1.CompositionTest{
-        metadata.name: "test-xkarpenter"
+        metadata.name: "test-karpenter"
         spec= {
             assertResources: [
-                platformv1alpha1.XKarpenter {
+                platformv1alpha1.Karpenter {
                     metadata = {
                         name = "configuration-aws-eks-karpenter"
                     }
@@ -37,7 +37,7 @@ _items = [
                         generateName = "configuration-aws-eks-karpenter-"
                     }
                     spec = {
-                        deletionPolicy = "Delete"
+                        managementPolicies = ["*"]
                         forProvider = {
                             clusterNameSelector = {
                                 matchLabels = {
@@ -57,6 +57,7 @@ _items = [
                         managementPolicies = ["*"]
                         providerConfigRef = {
                             name = "default"
+                            kind = "ProviderConfig"
                         }
                     }
                 }
@@ -68,7 +69,7 @@ _items = [
                         generateName = "configuration-aws-eks-karpenter-"
                     }
                     spec = {
-                        deletionPolicy = "Delete"
+                        managementPolicies = ["*"]
                         forProvider = {
                             policyArn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
                             roleSelector = {
@@ -81,6 +82,7 @@ _items = [
                         managementPolicies = ["*"]
                         providerConfigRef = {
                             name = "default"
+                            kind = "ProviderConfig"
                         }
                     }
                 }
@@ -95,7 +97,7 @@ _items = [
                         }
                     }
                     spec = {
-                        deletionPolicy = "Delete"
+                        managementPolicies = ["*"]
                         forProvider = {
                             assumeRolePolicy = json.encode({
                               Version: "2012-10-17",
@@ -117,6 +119,7 @@ _items = [
                         managementPolicies = ["*"]
                         providerConfigRef = {
                             name = "default"
+                            kind = "ProviderConfig"
                         }
                     }
                 }
@@ -128,7 +131,7 @@ _items = [
                         generateName = "configuration-aws-eks-karpenter-"
                     }
                     spec = {
-                        deletionPolicy = "Delete"
+                        managementPolicies = ["*"]
                         forProvider = {
                             policyArn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
                             roleSelector = {
@@ -141,6 +144,7 @@ _items = [
                         managementPolicies = ["*"]
                         providerConfigRef = {
                             name = "default"
+                            kind = "ProviderConfig"
                         }
                     }
                 }
@@ -152,7 +156,7 @@ _items = [
                         generateName = "configuration-aws-eks-karpenter-"
                     }
                     spec = {
-                        deletionPolicy = "Delete"
+                        managementPolicies = ["*"]
                         forProvider = {
                             policyArn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
                             roleSelector = {
@@ -165,6 +169,7 @@ _items = [
                         managementPolicies = ["*"]
                         providerConfigRef = {
                             name = "default"
+                            kind = "ProviderConfig"
                         }
                     }
                 }
@@ -176,7 +181,7 @@ _items = [
                         generateName = "configuration-aws-eks-karpenter-"
                     }
                     spec = {
-                        deletionPolicy = "Delete"
+                        managementPolicies = ["*"]
                         forProvider = {
                             policyArn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
                             roleSelector = {
@@ -189,6 +194,7 @@ _items = [
                         managementPolicies = ["*"]
                         providerConfigRef = {
                             name = "default"
+                            kind = "ProviderConfig"
                         }
                     }
                 }
@@ -200,7 +206,7 @@ _items = [
                         generateName = "configuration-aws-eks-karpenter-"
                     }
                     spec = {
-                        deletionPolicy = "Delete"
+                        managementPolicies = ["*"]
                         forProvider = {
                             roleSelector = {
                                 matchControllerRef = True
@@ -212,6 +218,7 @@ _items = [
                         managementPolicies = ["*"]
                         providerConfigRef = {
                             name = "default"
+                            kind = "ProviderConfig"
                         }
                     }
                 }
@@ -223,7 +230,7 @@ _items = [
                         generateName = "configuration-aws-eks-karpenter-"
                     }
                     spec = {
-                        deletionPolicy = "Orphan"
+                        managementPolicies = ["Create", "Observe", "Update"]
                         forProvider = {
                             manifest = {
                                 apiVersion = "karpenter.sh/v1"
@@ -298,9 +305,9 @@ _items = [
                                 }
                             }
                         }
-                        managementPolicy = "Default"
                         providerConfigRef = {
                             name = "configuration-aws-eks-karpenter"
+                            kind = "ProviderConfig"
                         }
                         watch = False
                     }
@@ -318,7 +325,7 @@ _items = [
                         name = "configuration-aws-eks-karpenter-healthevent"
                     }
                     spec = {
-                        deletionPolicy = "Delete"
+                        managementPolicies = ["*"]
                         forProvider = {
                             eventBusName = "default"
                             eventPattern = json.encode({
@@ -334,6 +341,7 @@ _items = [
                         managementPolicies = ["*"]
                         providerConfigRef = {
                             name = "default"
+                            kind = "ProviderConfig"
                         }
                     }
                 }
@@ -350,7 +358,7 @@ _items = [
                         name = "configuration-aws-eks-karpenter-instancerebalance"
                     }
                     spec = {
-                        deletionPolicy = "Delete"
+                        managementPolicies = ["*"]
                         forProvider = {
                             eventBusName = "default"
                             eventPattern = json.encode({
@@ -366,6 +374,7 @@ _items = [
                         managementPolicies = ["*"]
                         providerConfigRef = {
                             name = "default"
+                            kind = "ProviderConfig"
                         }
                     }
                 }
@@ -382,7 +391,7 @@ _items = [
                         name = "configuration-aws-eks-karpenter-instancestatechange"
                     }
                     spec = {
-                        deletionPolicy = "Delete"
+                        managementPolicies = ["*"]
                         forProvider = {
                             eventBusName = "default"
                             eventPattern = json.encode({
@@ -398,6 +407,7 @@ _items = [
                         managementPolicies = ["*"]
                         providerConfigRef = {
                             name = "default"
+                            kind = "ProviderConfig"
                         }
                     }
                 }
@@ -414,7 +424,7 @@ _items = [
                         name = "configuration-aws-eks-karpenter-spotinterrupt"
                     }
                     spec = {
-                        deletionPolicy = "Delete"
+                        managementPolicies = ["*"]
                         forProvider = {
                             eventBusName = "default"
                             eventPattern = json.encode({
@@ -430,6 +440,7 @@ _items = [
                         managementPolicies = ["*"]
                         providerConfigRef = {
                             name = "default"
+                            kind = "ProviderConfig"
                         }
                     }
                 }
@@ -441,7 +452,7 @@ _items = [
                         generateName = "configuration-aws-eks-karpenter-"
                     }
                     spec = {
-                        deletionPolicy = "Delete"
+                        managementPolicies = ["*"]
                         forProvider = {
                             messageRetentionSeconds = 300
                             name = "configuration-aws-eks-karpenter-karpenter-queue"
@@ -450,13 +461,14 @@ _items = [
                         managementPolicies = ["*"]
                         providerConfigRef = {
                             name = "default"
+                            kind = "ProviderConfig"
                         }
                     }
                 }
             ]
-            compositionPath: "apis/xkarpenters/composition.yaml"
+            compositionPath: "apis/karpenters/composition.yaml"
             xrPath: "examples/karpenter-xr.yaml"
-            xrdPath: "apis/xkarpenters/definition.yaml"
+            xrdPath: "apis/karpenters/definition.yaml"
             timeoutSeconds: 60
             validate: False
         }
